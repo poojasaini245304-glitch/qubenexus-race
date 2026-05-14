@@ -602,7 +602,7 @@
             }
         }
 
-        function drawCar(worldX, worldY, angle, color, name, isMe, carType) {
+       function drawCar(worldX, worldY, angle, color, name, isMe, carType) {
             const screenX = canvas.width/2 + (worldX - player.worldX);
             const screenY = canvas.height/2 + (worldY - player.worldY);
 
@@ -611,86 +611,221 @@
             ctx.rotate(angle);
 
             if (carType === 'f1') {
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(-50, -15, 100, 30);
-                ctx.fillStyle = color;
-                ctx.fillRect(-48, -13, 96, 26);
+                // F1 CAR - Sleek Racing Design
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.beginPath();
-                ctx.moveTo(48, 0);
-                ctx.lineTo(60, -8);
-                ctx.lineTo(60, 8);
+                ctx.ellipse(0, 0, 55, 20, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = '#333';
-                ctx.fillRect(-48, -20, 15, 40);
-                ctx.fillRect(35, -15, 10, 30);
-            } else if (carType === 'truck') {
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(-40, -25, 80, 50);
+               
+                // Main Body - Pointed nose
                 ctx.fillStyle = color;
-                ctx.fillRect(-38, -23, 76, 46);
-                ctx.fillStyle = '#87ceeb';
-                ctx.fillRect(-15, -20, 30, 25);
+                ctx.beginPath();
+                ctx.moveTo(60, 0);  // Nose tip
+                ctx.lineTo(40, -12);
+                ctx.lineTo(-30, -14);
+                ctx.lineTo(-45, -10);
+                ctx.lineTo(-50, 0);
+                ctx.lineTo(-45, 10);
+                ctx.lineTo(-30, 14);
+                ctx.lineTo(40, 12);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cockpit - Glass
+                const cockpitGrad = ctx.createLinearGradient(0, -8, 0, 8);
+                cockpitGrad.addColorStop(0, '#00d4ff');
+                cockpitGrad.addColorStop(1, '#0066cc');
+                ctx.fillStyle = cockpitGrad;
+                ctx.beginPath();
+                ctx.ellipse(5, 0, 18, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Front Wing
+                ctx.fillStyle = '#222';
+                ctx.fillRect(45, -18, 12, 36);
+               
+                // Rear Wing
+                ctx.fillStyle = color;
+                ctx.fillRect(-52, -22, 8, 44);
+                ctx.fillRect(-58, -18, 6, 36);
+
+                // Side Pods
+                ctx.fillStyle = isMe ? '#00ffff' : '#ff0088';
+                ctx.fillRect(-15, -16, 25, 6);
+                ctx.fillRect(-15, 10, 25, 6);
+
+                // Racing Stripes
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(60, 0);
+                ctx.lineTo(-50, 0);
+                ctx.stroke();
+
+            } else if (carType === 'sport') {
+                // SUPERCAR - Lamborghini Style
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 50, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main Body - Aggressive
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(50, 0);
+                ctx.lineTo(35, -16);
+                ctx.lineTo(-10, -18);
+                ctx.lineTo(-40, -12);
+                ctx.lineTo(-45, 0);
+                ctx.lineTo(-40, 12);
+                ctx.lineTo(-10, 18);
+                ctx.lineTo(35, 16);
+                ctx.closePath();
+                ctx.fill();
+
+                // Windshield
+                ctx.fillStyle = 'rgba(100,200,255,0.6)';
+                ctx.beginPath();
+                ctx.moveTo(15, -14);
+                ctx.lineTo(-5, -16);
+                ctx.lineTo(-15, -10);
+                ctx.lineTo(-5, -6);
+                ctx.closePath();
+                ctx.fill();
+
+                // Side Air Intake
+                ctx.fillStyle = '#111';
+                ctx.fillRect(-10, -20, 15, 5);
+                ctx.fillRect(-10, 15, 15, 5);
+
+                // Racing Decals
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-20, -2, 40, 4);
                 ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(-25, -28, 15, 0, Math.PI * 2);
-                ctx.arc(-25, 28, 15, 0, Math.PI * 2);
-                ctx.arc(25, -28, 15, 0, Math.PI * 2);
-                ctx.arc(25, 28, 15, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.font = 'bold 8px Arial';
+                ctx.fillText('GT', 0, 2);
+
             } else {
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(-45, -18, 90, 36);
+                // HYPER TRUCK - Cyberpunk Style
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(-45, -30, 90, 60);
+
+                // Main Body
                 ctx.fillStyle = color;
-                ctx.fillRect(-43, -16, 86, 32);
-                const gradient = ctx.createLinearGradient(0, -14, 0, 14);
-                gradient.addColorStop(0, isMe? '#00ffff' : '#ff0088');
-                gradient.addColorStop(1, isMe? '#0088ff' : '#ff0044');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(-20, -14, 40, 28);
+                ctx.fillRect(-42, -28, 84, 56);
+               
+                // Neon Outline
+                ctx.strokeStyle = isMe ? '#00ffff' : '#ff00ff';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = isMe ? '#00ffff' : '#ff00ff';
+                ctx.strokeRect(-42, -28, 84, 56);
+                ctx.shadowBlur = 0;
+
+                // Cabin
+                ctx.fillStyle = '#111';
+                ctx.fillRect(-35, -25, 30, 50);
                 ctx.fillStyle = '#87ceeb';
-                ctx.fillRect(-18, -12, 36, 10);
-                ctx.fillRect(-18, 2, 36, 10);
+                ctx.fillRect(-30, -22, 20, 15);
+                ctx.fillRect(-30, 7, 20, 15);
+
+                // Grill
+                ctx.fillStyle = '#333';
+                for(let i = 0; i < 5; i++) {
+                    ctx.fillRect(35, -20 + i*10, 6, 4);
+                }
             }
 
-            ctx.fillStyle = '#000';
-            ctx.fillRect(-35, -22, 18, 10);
-            ctx.fillRect(-35, 12, 18, 10);
-            ctx.fillRect(20, -22, 18, 10);
-            ctx.fillRect(20, 12, 18, 10);
+            // WHEELS - Sab cars ke liye common
+            ctx.fillStyle = '#111';
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            // Front wheels
+            ctx.beginPath();
+            ctx.arc(25, -20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(25, 20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Rear wheels
+            ctx.beginPath();
+            ctx.arc(-25, -20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(-25, 20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
 
+            // RIMS - Stylish
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            [25, -25].forEach(x => {
+                [-20, 20].forEach(y => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y-6);
+                    ctx.lineTo(x, y+6);
+                    ctx.moveTo(x-6, y);
+                    ctx.lineTo(x+6, y);
+                    ctx.stroke();
+                });
+            });
+
+            // HEADLIGHTS - Glow effect
             ctx.fillStyle = '#ffff00';
-            ctx.shadowBlur = 30;
+            ctx.shadowBlur = 20;
             ctx.shadowColor = '#ffff00';
-            ctx.fillRect(43, -12, 10, 10);
-            ctx.fillRect(43, 2, 10, 10);
+            ctx.beginPath();
+            ctx.arc(48, -8, 5, 0, Math.PI * 2);
+            ctx.arc(48, 8, 5, 0, Math.PI * 2);
+            ctx.fill();
             ctx.shadowBlur = 0;
 
+            // NITRO FLAMES
             if (isMe && keys.space && player.nitro > 0) {
-                ctx.fillStyle = '#ff4400';
+                const flameGrad = ctx.createLinearGradient(-50, 0, -80, 0);
+                flameGrad.addColorStop(0, '#ff4400');
+                flameGrad.addColorStop(0.5, '#ffaa00');
+                flameGrad.addColorStop(1, 'rgba(255,255,0,0)');
+                ctx.fillStyle = flameGrad;
                 ctx.beginPath();
-                ctx.moveTo(-43, -10);
-                ctx.lineTo(-65, 0);
-                ctx.lineTo(-43, 10);
+                ctx.moveTo(-50, -12);
+                ctx.lineTo(-85, -5);
+                ctx.lineTo(-90, 0);
+                ctx.lineTo(-85, 5);
+                ctx.lineTo(-50, 12);
                 ctx.fill();
-                ctx.fillStyle = '#ffaa00';
+               
+                // Blue core
+                ctx.fillStyle = '#00aaff';
                 ctx.beginPath();
-                ctx.moveTo(-43, -6);
-                ctx.lineTo(-55, 0);
-                ctx.lineTo(-43, 6);
+                ctx.moveTo(-50, -6);
+                ctx.lineTo(-70, -2);
+                ctx.lineTo(-72, 0);
+                ctx.lineTo(-70, 2);
+                ctx.lineTo(-50, 6);
                 ctx.fill();
             }
 
             ctx.restore();
 
+            // NAME TAG - Stylish
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(screenX - 60, screenY - 75, 120, 25);
+            ctx.strokeStyle = isMe ? '#00d4ff' : '#ff3366';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(screenX - 60, screenY - 75, 120, 25);
+           
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 24px Arial';
+            ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 7;
-            ctx.strokeText(name, screenX, screenY - 60);
-            ctx.fillText(name, screenX, screenY - 60);
-        }
-
+            ctx.fillText(name, screenX, screenY - 58);
+        } 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawHighway();
