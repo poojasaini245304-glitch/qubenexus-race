@@ -450,8 +450,8 @@
 
             if (keys.w) player.speed += 1.0;
             if (keys.s) player.speed -= 1.0;
-            if (keys.a) player.angle -= 0.08;
-            if (keys.d) player.angle += 0.08;
+            if (keys.a) player.angle -= 0.05;  // Left
+            if (keys.d) player.angle += 0.05;  // Right
             if (keys.space && player.nitro > 0) {
                 player.speed += 2.0;
                 player.nitro -= 3;
