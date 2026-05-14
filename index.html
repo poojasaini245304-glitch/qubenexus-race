@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qubenexus Racing - Online Multiplayer</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #00d4ff; font-family: 'Arial', sans-serif; overflow: hidden; }
+        #gameCanvas { display: block; background: #1a1a1a; }
+        #joinScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .joinBox { background: #1a1a1a; padding: 40px; border-radius: 15px; border: 2px solid #00d4ff; text-align: center; }
+        .joinBox h1 { margin-bottom: 20px; font-size: 2.5em; }
+        .joinBox input { padding: 15px; font-size: 18px; background: #0a0a0a; border: 2px solid #00d4ff; color: #00d4ff; border-radius: 8px; margin: 10px; width: 250px; }
+        .joinBox button { padding: 15px 40px; font-size: 20px; background: #00d4ff; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 100; }
+        #playerList { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid #00d4ff; }
+        #controls { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="joinScreen">
+        <div class="joinBox">
+            <h1>🏎️ QUBENEXUS RACING 🏎️</h1>
+            <p>Online Multiplayer Racing Game</p>
+            <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
+            <br>
+            <button onclick="joinGame()">🏁 JOIN ONLINE RACE</button>
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui"><h2>🏁 QUBENEXUS RACING</h2><p>Speed: <span id="speed">0</span> km/h</p></div>
+    <div id="playerList"><h3>Players Online:</h3><div id="players"></div></div>
+    <div id="controls"><p><b>Controls:</b> W/↑ = Accelerate | S/↓ = Brake | A/D or ←/→ = Turn | Space = Nitro</p></div>
+    <script>
+        const socket = io();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let player = { x: 400, y: 300, angle: 0, speed: 0, name: '' };
+        let players = {};
+        let keys = {};
+        function joinGame() {
+            const name = document.getElementById('playerName').value.trim();
+            if (!name) { alert('Please enter your name!'); return; }
+            player.name = name;
+            document.getElementById('joinScreen').style.display = 'none';
+            socket.emit('joinGame', name);
+        }
+        socket.on('updatePlayers', (serverPlayers) => {
+            players = serverPlayers;
+            const list = document.getElementById('players');
+            list.innerHTML = '';
+            Object.values(players).forEach(p => {
+                list.innerHTML += `<div>🏎️ ${p.name}</div>`;
+            });
+        });
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        function update() {
+            if (keys['w'] || keys['ArrowUp']) player.speed += 0.3;
+            if (keys['s'] || keys['ArrowDown']) player.speed -= 0.3;
+            if (keys['a'] || keys['ArrowLeft']) player.angle -= 0.05;
+            if (keys['d'] || keys['ArrowRight']) player.angle += 0.05;
+            if (keys[' ']) player.speed += 0.6;
+            player.speed *= 0.95;
+            player.x += Math.cos(player.angle) * player.speed;
+            player.y += Math.sin(player.angle) * player.speed;
+            document.getElementById('speed').textContent = Math.abs(Math.floor(player.speed * 10));
+            socket.emit('playerMove', { x: player.x, y: player.y, rotation: player.angle });
+        }
+        function draw() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#333';
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            Object.values(players).forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.fillStyle = p.id === socket.id ? '#00d4ff' : '#ff0066';
+                ctx.fillRect(-15, -8, 30, 16);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText(p.name, -15, -15);
+                ctx.restore();
+            });
+        }
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+    </script>
+</body>
+</html> 
