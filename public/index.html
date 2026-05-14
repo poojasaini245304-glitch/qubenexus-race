@@ -32,4 +32,227 @@
             <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
             <br>
             <button onclick="joinGame()">🏁 START RACING</button>
-        </ 
+        </div>
+    </div>
+   
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="miniMap"></canvas>
+   
+    <div id="ui">
+        <h2>🏁 QUBENEXUS RACING</h2>
+        <p>Speed: <span id="speed">0</span> km/h</p>
+        <p>Lap: <span id="lap">0</span>/3</p>
+        <p>Nitro:</p>
+        <div class="nitro-bar"><div class="nitro-fill" id="nitroFill" style="width: 100%"></div></div>
+    </div>
+   
+    <div id="playerList">
+        <h3>🏆 Racers Online:</h3>
+        <div id="players"></div>
+    </div>
+   
+    <div id="controls">
+        <p><b>Controls:</b> W/↑ Accelerate | S/↓ Brake | A/D Turn | SPACE Nitro Boost</p>
+    </div>
+
+    <script>
+        const socket = io();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const miniMap = document.getElementById('miniMap');
+        const miniCtx = miniMap.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        miniMap.width = 200;
+        miniMap.height = 200;
+
+        let player = { x: 600, y: 400, angle: 0, speed: 0, name: '', nitro: 100, lap: 0, lastCheckpoint: 0 };
+        let players = {};
+        let keys = {};
+        let checkpoints = [
+            {x: 600, y: 200, passed: false},
+            {x: 1200, y: 400, passed: false},
+            {x: 600, y: 600, passed: false},
+            {x: 200, y: 400, passed: false}
+        ];
+
+        function joinGame() {
+            const name = document.getElementById('playerName').value.trim();
+            if (!name) { alert('Please enter your name!'); return; }
+            player.name = name;
+            document.getElementById('joinScreen').style.display = 'none';
+            socket.emit('joinGame', name);
+        }
+
+        socket.on('updatePlayers', (serverPlayers) => {
+            players = serverPlayers;
+            updatePlayerList();
+        });
+
+        function updatePlayerList() {
+            const list = document.getElementById('players');
+            list.innerHTML = '';
+            Object.values(players).sort((a,b) => b.lap - a.lap).forEach((p, i) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏎️';
+                list.innerHTML += `<div>${medal} ${p.name} - Lap ${p.lap || 0}</div>`;
+            });
+        }
+
+        window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        function update() {
+            if (keys['w'] || keys['ArrowUp']) player.speed += 0.4;
+            if (keys['s'] || keys['ArrowDown']) player.speed -= 0.4;
+            if (keys['a'] || keys['ArrowLeft']) player.angle -= 0.04;
+            if (keys['d'] || keys['ArrowRight']) player.angle += 0.04;
+            if (keys[' '] && player.nitro > 0) {
+                player.speed += 0.8;
+                player.nitro -= 1;
+                document.getElementById('nitroFill').style.width = player.nitro + '%';
+            }
+           
+            if (player.nitro < 100 && !keys[' ']) {
+                player.nitro += 0.2;
+                document.getElementById('nitroFill').style.width = player.nitro + '%';
+            }
+
+            player.speed *= 0.96;
+            if (player.speed > 15) player.speed = 15;
+            if (player.speed < -5) player.speed = -5;
+           
+            player.x += Math.cos(player.angle) * player.speed;
+            player.y += Math.sin(player.angle) * player.speed;
+
+            checkLap();
+            document.getElementById('speed').textContent = Math.abs(Math.floor(player.speed * 10));
+            document.getElementById('lap').textContent = player.lap;
+            socket.emit('playerMove', { x: player.x, y: player.y, rotation: player.angle, lap: player.lap });
+        }
+
+        function checkLap() {
+            checkpoints.forEach((cp, i) => {
+                const dist = Math.hypot(player.x - cp.x, player.y - cp.y);
+                if (dist < 50 && i === player.lastCheckpoint) {
+                    player.lastCheckpoint = (i + 1) % 4;
+                    if (i === 3) player.lap++;
+                }
+            });
+        }
+
+        function drawTrack() {
+            // Grass
+            ctx.fillStyle = '#2a6f2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+           
+            // Track - Oval
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 120;
+            ctx.beginPath();
+            ctx.ellipse(700, 400, 500, 300, 0, 0, Math.PI * 2);
+            ctx.stroke();
+           
+            // Track lines
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.ellipse(700, 400, 500, 300, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+           
+            // Start/Finish line
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(600, 340);
+            ctx.lineTo(600, 460);
+            ctx.stroke();
+        }
+
+        function drawCar(x, y, angle, color, name, isMe) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+           
+            // Car shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(-22, -12, 44, 24);
+           
+            // Car body
+            ctx.fillStyle = color;
+            ctx.fillRect(-20, -10, 40, 20);
+           
+            // Car roof
+            ctx.fillStyle = isMe ? '#00d4ff' : '#ff0066';
+            ctx.fillRect(-10, -8, 20, 16);
+           
+            // Windows
+            ctx.fillStyle = '#87ceeb';
+            ctx.fillRect(-8, -6, 16, 5);
+            ctx.fillRect(-8, 1, 16, 5);
+           
+            // Wheels
+            ctx.fillStyle = '#111';
+            ctx.fillRect(-18, -13, 8, 4);
+            ctx.fillRect(-18, 9, 8, 4);
+            ctx.fillRect(10, -13, 8, 4);
+            ctx.fillRect(10, 9, 8, 4);
+           
+            // Headlights
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(18, -6, 3, 3);
+            ctx.fillRect(18, 3, 3, 3);
+           
+            ctx.restore();
+           
+            // Name tag
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(name, x, y - 25);
+        }
+
+        function drawMiniMap() {
+            miniCtx.fillStyle = '#1a1a1a';
+            miniCtx.fillRect(0, 0, 200, 200);
+           
+            // Mini track
+            miniCtx.strokeStyle = '#444';
+            miniCtx.lineWidth = 20;
+            miniCtx.beginPath();
+            miniCtx.ellipse(100, 100, 70, 50, 0, 0, Math.PI * 2);
+            miniCtx.stroke();
+           
+            // Players on mini map
+            Object.values(players).forEach(p => {
+                const miniX = (p.x / canvas.width) * 200;
+                const miniY = (p.y / canvas.height) * 200;
+                miniCtx.fillStyle = p.id === socket.id ? '#00d4ff' : '#ff0066';
+                miniCtx.beginPath();
+                miniCtx.arc(miniX, miniY, 3, 0, Math.PI * 2);
+                miniCtx.fill();
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawTrack();
+           
+            Object.values(players).forEach(p => {
+                const color = p.id === socket.id ? '#0066ff' : '#ff3366';
+                drawCar(p.x, p.y, p.rotation, color, p.name, p.id === socket.id);
+            });
+           
+            drawMiniMap();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+    </script>
+</body>
+</html> 
