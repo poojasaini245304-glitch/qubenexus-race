@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('raceWon', (name) => {
-        io.emit('chatMessage', { name: 'SYSTEM', message: 🏆 ${name} WON THE RACE! 🏆 });
+        io.emit('chatMessage', { name: 'SYSTEM', message: name + ' WON THE RACE!' });
     });
 
     socket.on('disconnect', () => {
