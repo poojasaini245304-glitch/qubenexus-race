@@ -3,38 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qubenexus Racing - FIXED</title>
+    <title>Qubenexus Racing - CAR FIXED</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { background: #0a0a0a; color: #00d4ff; font-family: 'Arial', sans-serif; overflow: hidden; }
-        #gameCanvas { display: block; background: #1a5c1a; }
+        body { background: #000; color: #00d4ff; font-family: 'Arial', sans-serif; overflow: hidden; }
+        #gameCanvas { display: block; }
         #joinScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 200; }
-       .joinBox { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); padding: 40px; border-radius: 20px; border: 3px solid #00d4ff; text-align: center; }
-       .joinBox h1 { margin-bottom: 20px; font-size: 2.5em; }
+       .joinBox { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); padding: 40px; border-radius: 20px; border: 3px solid #00d4ff; text-align: center; box-shadow: 0 0 40px #00d4ff80; }
+       .joinBox h1 { margin-bottom: 20px; font-size: 2.8em; text-shadow: 0 0 20px #00d4ff; }
        .joinBox input { padding: 15px; font-size: 18px; background: #0a0a0a; border: 2px solid #00d4ff; color: #00d4ff; border-radius: 10px; margin: 10px; width: 280px; }
        .joinBox button { padding: 15px 50px; font-size: 22px; background: linear-gradient(45deg, #00d4ff, #00ffff); color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 2px solid #00d4ff; }
-        #playerList { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 2px solid #00d4ff; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 15px; border: 2px solid #00d4ff; }
+        #playerList { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 15px; border: 2px solid #00d4ff; }
         #mobileControls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 100; }
-       .controlBtn { width: 90px; height: 90px; background: rgba(0,212,255,0.4); border: 4px solid #00d4ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; color: #00d4ff; cursor: pointer; box-shadow: 0 0 20px #00d4ff50; }
-       .controlBtn:active { background: rgba(0,212,255,0.9); transform: scale(0.9); }
+       .controlBtn { width: 95px; height: 95px; background: rgba(0,212,255,0.5); border: 4px solid #00d4ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #00d4ff; cursor: pointer; box-shadow: 0 0 25px #00d4ff60; font-weight: bold; }
+       .controlBtn:active { background: rgba(0,212,255,1); transform: scale(0.9); }
         #leftControls { display: flex; gap: 20px; }
         #rightControls { display: flex; gap: 15px; flex-direction: column; align-items: center; }
-        #nitroBtn { background: rgba(255,0,102,0.4); border-color: #ff0066; color: #ff0066; width: 110px; height: 110px; box-shadow: 0 0 20px #ff006650; }
-       .nitro-bar { width: 150px; height: 15px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 5px; }
-       .nitro-fill { height: 100%; background: linear-gradient(90deg, #ff0066, #ff6600); }
-        #soundBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #00d4ff; color: #00d4ff; padding: 10px 20px; border-radius: 10px; cursor: pointer; z-index: 100; }
+        #nitroBtn { background: rgba(255,0,102,0.5); border-color: #ff0066; color: #ff0066; width: 115px; height: 115px; box-shadow: 0 0 25px #ff006660; }
+        #nitroBtn:active { background: rgba(255,0,102,1); }
+       .nitro-bar { width: 150px; height: 18px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 5px; border: 1px solid #555; }
+       .nitro-fill { height: 100%; background: linear-gradient(90deg, #ff0066, #ff6600, #ffff00); transition: 0.2s; }
+        #soundBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 2px solid #00d4ff; color: #00d4ff; padding: 12px 25px; border-radius: 10px; cursor: pointer; z-index: 100; font-size: 16px; }
     </style>
 </head>
 <body>
     <div id="joinScreen">
         <div class="joinBox">
             <h1>🏎️ QUBENEXUS RACING 🏎️</h1>
-            <p style="font-size: 1.1em; margin-bottom: 20px;">🔊 Car Fixed - Ab Dikhegi!</p>
-            <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
+            <p style="font-size: 1.2em; margin-bottom: 20px;">✅ Car Ab Hamesha Dikhegi!</p>
+            <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15" value="Sneh">
             <br>
-            <button onclick="joinGame()">🏁 START RACE</button>
+            <button onclick="startGame()">🏁 START RACE</button>
         </div>
     </div>
 
@@ -49,7 +50,7 @@
     </div>
 
     <div id="playerList">
-        <h3>🏆 Racers:</h3>
+        <h3>🏆 Racers Online:</h3>
         <div id="players"></div>
     </div>
 
@@ -72,15 +73,17 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // FIXED: Gaadi hamesha dikhegi
+        // FIXED: Car hamesha screen ke center me rahegi
         let player = {
-            x: 0, y: 0,
-            angle: -Math.PI/2,
+            worldX: 0,
+            worldY: 0,
+            angle: 0,
             speed: 0,
-            name: '',
+            name: 'Player',
             nitro: 100,
             color: '#00d4ff'
         };
+
         let players = {};
         let keys = { w: false, a: false, d: false, s: false, space: false };
         let soundOn = true;
@@ -98,7 +101,7 @@
                 engineSound.connect(engineGain);
                 engineGain.connect(audioContext.destination);
                 engineSound.start();
-            } catch(e) { console.log('Audio not supported'); }
+            } catch(e) {}
         }
 
         function playNitroSound() {
@@ -108,21 +111,21 @@
                 const gain = audioContext.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(200, audioContext.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
                 osc.connect(gain);
                 gain.connect(audioContext.destination);
                 osc.start();
-                osc.stop(audioContext.currentTime + 0.3);
+                osc.stop(audioContext.currentTime + 0.4);
             } catch(e) {}
         }
 
         function updateEngineSound() {
             if (!soundOn ||!engineGain) return;
-            const speedRatio = Math.abs(player.speed) / 15;
-            engineSound.frequency.value = 50 + speedRatio * 250;
-            engineGain.gain.value = speedRatio * 0.2;
+            const speedRatio = Math.abs(player.speed) / 20;
+            engineSound.frequency.value = 60 + speedRatio * 300;
+            engineGain.gain.value = 0.05 + speedRatio * 0.25;
         }
 
         function toggleSound() {
@@ -132,7 +135,7 @@
         }
 
         // Controls
-        function addBtnListeners(btn, key) {
+        function setupButton(btn, key) {
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
             btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
             btn.addEventListener('mousedown', () => keys[key] = true);
@@ -140,10 +143,10 @@
             btn.addEventListener('mouseleave', () => keys[key] = false);
         }
 
-        addBtnListeners(document.getElementById('gasBtn'), 'w');
-        addBtnListeners(document.getElementById('brakeBtn'), 's');
-        addBtnListeners(document.getElementById('leftBtn'), 'a');
-        addBtnListeners(document.getElementById('rightBtn'), 'd');
+        setupButton(document.getElementById('gasBtn'), 'w');
+        setupButton(document.getElementById('brakeBtn'), 's');
+        setupButton(document.getElementById('leftBtn'), 'a');
+        setupButton(document.getElementById('rightBtn'), 'd');
 
         const nitroBtn = document.getElementById('nitroBtn');
         nitroBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys.space = true; playNitroSound(); });
@@ -166,8 +169,8 @@
             if(e.key === ' ') keys.space = false;
         });
 
-        function joinGame() {
-            const name = document.getElementById('playerName').value.trim() || 'Player';
+        function startGame() {
+            const name = document.getElementById('playerName').value.trim() || 'Sneh';
             if (!audioContext) initAudio();
             player.name = name;
             gameStarted = true;
@@ -187,166 +190,193 @@
         function update() {
             if (!gameStarted) return;
 
-            if (keys.w) player.speed += 0.8;
-            if (keys.s) player.speed -= 0.8;
-            if (keys.a) player.angle -= 0.07;
-            if (keys.d) player.angle += 0.07;
+            // Speed controls - FAST
+            if (keys.w) player.speed += 1.0;
+            if (keys.s) player.speed -= 1.0;
+            if (keys.a) player.angle -= 0.08;
+            if (keys.d) player.angle += 0.08;
             if (keys.space && player.nitro > 0) {
-                player.speed += 1.8;
-                player.nitro -= 2.5;
+                player.speed += 2.0;
+                player.nitro -= 3;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
 
             if (player.nitro < 100 &&!keys.space) {
-                player.nitro += 0.6;
+                player.nitro += 0.8;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
 
-            player.speed *= 0.97;
-            if (player.speed > 20) player.speed = 20;
-            if (player.speed < -7) player.speed = -7;
+            player.speed *= 0.96;
+            if (player.speed > 22) player.speed = 22;
+            if (player.speed < -8) player.speed = -8;
 
-            player.x += Math.cos(player.angle) * player.speed;
-            player.y += Math.sin(player.angle) * player.speed;
+            // Move in world coordinates
+            player.worldX += Math.cos(player.angle) * player.speed;
+            player.worldY += Math.sin(player.angle) * player.speed;
 
             updateEngineSound();
             document.getElementById('speed').textContent = Math.abs(Math.floor(player.speed * 10));
-            socket.emit('playerMove', { x: player.x, y: player.y, rotation: player.angle });
+            socket.emit('playerMove', { x: player.worldX, y: player.worldY, rotation: player.angle });
         }
 
-        function drawTrack() {
-            // Grass
-            ctx.fillStyle = '#0d4d0d';
+        function drawWorld() {
+            // Green grass background
+            ctx.fillStyle = '#0d5c0d';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Camera centered on player
-            ctx.save();
-            ctx.translate(canvas.width/2 - player.x, canvas.height/2 - player.y);
+            // Draw grid for movement feel
+            ctx.strokeStyle = '#0a4a0a';
+            ctx.lineWidth = 2;
+            const gridSize = 100;
+            const offsetX = -player.worldX % gridSize;
+            const offsetY = -player.worldY % gridSize;
 
-            // Big oval track
+            for(let x = offsetX; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for(let y = offsetY; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw oval track around world origin
+            const trackX = canvas.width/2 - player.worldX;
+            const trackY = canvas.height/2 - player.worldY;
+
+            // Road
             ctx.strokeStyle = '#1a1a1a';
-            ctx.lineWidth = 250;
+            ctx.lineWidth = 300;
             ctx.beginPath();
-            ctx.ellipse(0, 0, 1000, 700, 0, 0, Math.PI * 2);
+            ctx.ellipse(trackX, trackY, 1200, 800, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Track markings
+            // Yellow center line
             ctx.strokeStyle = '#ffff00';
-            ctx.lineWidth = 8;
-            ctx.setLineDash([50, 50]);
+            ctx.lineWidth = 10;
+            ctx.setLineDash([60, 60]);
             ctx.beginPath();
-            ctx.ellipse(0, 0, 1000, 700, 0, 0, Math.PI * 2);
+            ctx.ellipse(trackX, trackY, 1200, 800, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Start line
+            // Start/Finish line
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 20;
+            ctx.lineWidth = 25;
             ctx.beginPath();
-            ctx.moveTo(0, -700);
-            ctx.lineTo(0, -500);
+            ctx.moveTo(trackX, trackY - 800);
+            ctx.lineTo(trackX, trackY - 500);
             ctx.stroke();
 
-            ctx.restore();
+            // Checkered
+            for(let i = 0; i < 15; i++) {
+                ctx.fillStyle = i % 2 === 0? '#fff' : '#000';
+                ctx.fillRect(trackX - 12, trackY - 800 + i*20, 24, 20);
+            }
         }
 
-        function drawCar(x, y, angle, color, name, isMe) {
-            // Convert to screen coordinates
-            const screenX = canvas.width/2 + (x - player.x);
-            const screenY = canvas.height/2 + (y - player.y);
+        function drawCar(worldX, worldY, angle, color, name, isMe) {
+            // Convert world coords to screen coords - CAR ALWAYS AT CENTER
+            const screenX = canvas.width/2 + (worldX - player.worldX);
+            const screenY = canvas.height/2 + (worldY - player.worldY);
 
             ctx.save();
             ctx.translate(screenX, screenY);
             ctx.rotate(angle);
 
-            // HUGE CAR - 4x size
+            // MASSIVE CAR - Ab dikhegi hi dikhegi
             // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillRect(-40, -20, 80, 40);
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(-45, -22, 90, 44);
 
             // Main body
             ctx.fillStyle = color;
-            ctx.fillRect(-38, -18, 76, 36);
+            ctx.fillRect(-43, -20, 86, 40);
 
-            // Roof with gradient
-            const gradient = ctx.createLinearGradient(0, -16, 0, 16);
+            // Roof with metallic effect
+            const gradient = ctx.createLinearGradient(0, -18, 0, 18);
             gradient.addColorStop(0, isMe? '#00ffff' : '#ff0088');
             gradient.addColorStop(1, isMe? '#0088ff' : '#ff0044');
             ctx.fillStyle = gradient;
-            ctx.fillRect(-20, -16, 40, 32);
+            ctx.fillRect(-22, -18, 44, 36);
 
             // Windows
             ctx.fillStyle = '#87ceeb';
-            ctx.fillRect(-18, -14, 36, 12);
-            ctx.fillRect(-18, 2, 36, 12);
+            ctx.fillRect(-20, -16, 40, 14);
+            ctx.fillRect(-20, 2, 40, 14);
 
-            // Wheels - Bigger
+            // Wheels - HUGE
             ctx.fillStyle = '#000';
-            ctx.fillRect(-35, -24, 18, 10);
-            ctx.fillRect(-35, 14, 18, 10);
-            ctx.fillRect(20, -24, 18, 10);
-            ctx.fillRect(20, 14, 18, 10);
+            ctx.fillRect(-40, -26, 20, 12);
+            ctx.fillRect(-40, 14, 20, 12);
+            ctx.fillRect(23, -26, 20, 12);
+            ctx.fillRect(23, 14, 20, 12);
 
-            // Wheel rims
-            ctx.fillStyle = '#ccc';
-            ctx.fillRect(-32, -22, 12, 6);
-            ctx.fillRect(-32, 16, 12, 6);
-            ctx.fillRect(23, -22, 12, 6);
-            ctx.fillRect(23, 16, 12, 6);
+            // Rims
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(-37, -24, 14, 8);
+            ctx.fillRect(-37, 16, 14, 8);
+            ctx.fillRect(26, -24, 14, 8);
+            ctx.fillRect(26, 16, 14, 8);
 
-            // Headlights - glowing
+            // Headlights - GLOWING
             ctx.fillStyle = '#ffff00';
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 30;
             ctx.shadowColor = '#ffff00';
-            ctx.fillRect(36, -12, 8, 8);
-            ctx.fillRect(36, 4, 8, 8);
+            ctx.fillRect(41, -14, 10, 10);
+            ctx.fillRect(41, 4, 10, 10);
             ctx.shadowBlur = 0;
 
             // Spoiler
             ctx.fillStyle = '#222';
-            ctx.fillRect(-38, -18, 8, 36);
+            ctx.fillRect(-43, -20, 10, 40);
 
-            // Exhaust flames when nitro
+            // Nitro flames
             if (isMe && keys.space && player.nitro > 0) {
-                ctx.fillStyle = '#ff6600';
+                ctx.fillStyle = '#ff4400';
                 ctx.beginPath();
-                ctx.moveTo(-38, -8);
-                ctx.lineTo(-50, 0);
-                ctx.lineTo(-38, 8);
+                ctx.moveTo(-43, -10);
+                ctx.lineTo(-60, 0);
+                ctx.lineTo(-43, 10);
                 ctx.fill();
-                ctx.fillStyle = '#ffff00';
+                ctx.fillStyle = '#ffaa00';
                 ctx.beginPath();
-                ctx.moveTo(-38, -5);
-                ctx.lineTo(-45, 0);
-                ctx.lineTo(-38, 5);
+                ctx.moveTo(-43, -6);
+                ctx.lineTo(-52, 0);
+                ctx.lineTo(-43, 6);
                 ctx.fill();
             }
 
             ctx.restore();
 
-            // Name tag - Bigger
+            // Name tag - BIG
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 22px Arial';
+            ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 6;
-            ctx.strokeText(name, screenX, screenY - 55);
-            ctx.fillText(name, screenX, screenY - 55);
+            ctx.lineWidth = 7;
+            ctx.strokeText(name, screenX, screenY - 60);
+            ctx.fillText(name, screenX, screenY - 60);
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawTrack();
+            drawWorld();
 
-            // Draw all players from server
+            // Draw other players
             Object.values(players).forEach(p => {
-                const color = p.id === socket.id? '#00d4ff' : '#ff3366';
-                drawCar(p.x, p.y, p.rotation, color, p.name, p.id === socket.id);
+                if (p.id!== socket.id) {
+                    drawCar(p.x, p.y, p.rotation, '#ff3366', p.name, false);
+                }
             });
 
-            // FIXED: Always draw local player even if server hasn't sent it yet
-            if (gameStarted &&!players[socket.id]) {
-                drawCar(player.x, player.y, player.angle, '#00d4ff', player.name, true);
+            // ALWAYS draw our car at center
+            if (gameStarted) {
+                drawCar(player.worldX, player.worldY, player.angle, '#00d4ff', player.name, true);
             }
         }
 
@@ -355,6 +385,12 @@
             draw();
             requestAnimationFrame(gameLoop);
         }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
         gameLoop();
     </script>
 </body>
