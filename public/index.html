@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qubenexus Racing - With Sound</title>
+    <title>Qubenexus Racing - Camera Follow</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -22,9 +22,8 @@
         #leftControls { display: flex; gap: 15px; }
         #rightControls { display: flex; gap: 15px; flex-direction: column; align-items: center; }
         #nitroBtn { background: rgba(255,0,102,0.3); border-color: #ff0066; color: #ff0066; width: 100px; height: 100px; }
-        #nitroBtn:active { background: rgba(255,0,102,0.8); }
         .nitro-bar { width: 150px; height: 15px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 5px; }
-        .nitro-fill { height: 100%; background: linear-gradient(90deg, #ff0066, #ff6600); transition: 0.3s; }
+        .nitro-fill { height: 100%; background: linear-gradient(90deg, #ff0066, #ff6600); }
         #soundBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #00d4ff; color: #00d4ff; padding: 10px 20px; border-radius: 10px; cursor: pointer; z-index: 100; }
     </style>
 </head>
@@ -32,7 +31,7 @@
     <div id="joinScreen">
         <div class="joinBox">
             <h1>🏎️ QUBENEXUS RACING 🏎️</h1>
-            <p style="font-size: 1.1em; margin-bottom: 20px;">🔊 With Engine Sounds!</p>
+            <p style="font-size: 1.1em; margin-bottom: 20px;">🔊 With Sound + Camera Follow!</p>
             <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
             <br>
             <button onclick="joinGame()">🏁 START RACE</button>
@@ -74,28 +73,30 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let player = { x: 600, y: 350, angle: -1.57, speed: 0, name: '', nitro: 100, lap: 0 };
+        // WORLD SIZE - Bada map
+        const WORLD_WIDTH = 3000;
+        const WORLD_HEIGHT = 3000;
+       
+        // Camera jo player ko follow karega
+        let camera = { x: 0, y: 0 };
+       
+        let player = { x: 1500, y: 1500, angle: -1.57, speed: 0, name: '', nitro: 100, lap: 0 };
         let players = {};
         let keys = { w: false, a: false, d: false, s: false, space: false };
         let soundOn = true;
-        let engineSound, nitroSound, brakeSound;
-        let audioContext;
+        let audioContext, engineGain;
+        let engineSound;
 
-        // SOUND SETUP
         function initAudio() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-           
-            // Engine sound using oscillator
             engineSound = audioContext.createOscillator();
-            const engineGain = audioContext.createGain();
+            engineGain = audioContext.createGain();
             engineSound.type = 'sawtooth';
             engineSound.frequency.value = 50;
             engineGain.gain.value = 0;
             engineSound.connect(engineGain);
             engineGain.connect(audioContext.destination);
             engineSound.start();
-           
-            window.engineGain = engineGain;
         }
 
         function playNitroSound() {
@@ -113,42 +114,28 @@
             osc.stop(audioContext.currentTime + 0.3);
         }
 
-        function playBrakeSound() {
-            if (!soundOn || !audioContext) return;
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            osc.type = 'square';
-            osc.frequency.value = 150;
-            gain.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            osc.start();
-            osc.stop(audioContext.currentTime + 0.2);
-        }
-
         function updateEngineSound() {
-            if (!soundOn || !window.engineGain) return;
-            const speedRatio = Math.abs(player.speed) / 12;
-            engineSound.frequency.value = 50 + speedRatio * 200;
-            window.engineGain.gain.value = speedRatio * 0.15;
+            if (!soundOn || !engineGain) return;
+            const speedRatio = Math.abs(player.speed) / 15;
+            engineSound.frequency.value = 50 + speedRatio * 250;
+            engineGain.gain.value = speedRatio * 0.2;
         }
 
         function toggleSound() {
             soundOn = !soundOn;
             document.getElementById('soundBtn').textContent = soundOn ? '🔊 Sound: ON' : '🔇 Sound: OFF';
-            if (window.engineGain) window.engineGain.gain.value = soundOn ? 0.05 : 0;
+            if (engineGain) engineGain.gain.value = soundOn ? 0.05 : 0;
         }
 
-        // Button Controls
+        // Controls
         document.getElementById('gasBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.w = true; });
         document.getElementById('gasBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys.w = false; });
         document.getElementById('gasBtn').addEventListener('mousedown', () => keys.w = true);
         document.getElementById('gasBtn').addEventListener('mouseup', () => keys.w = false);
        
-        document.getElementById('brakeBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.s = true; playBrakeSound(); });
+        document.getElementById('brakeBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.s = true; });
         document.getElementById('brakeBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys.s = false; });
-        document.getElementById('brakeBtn').addEventListener('mousedown', () => { keys.s = true; playBrakeSound(); });
+        document.getElementById('brakeBtn').addEventListener('mousedown', () => keys.s = true);
         document.getElementById('brakeBtn').addEventListener('mouseup', () => keys.s = false);
        
         document.getElementById('leftBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.a = true; });
@@ -166,10 +153,9 @@
         document.getElementById('nitroBtn').addEventListener('mousedown', () => { keys.space = true; playNitroSound(); });
         document.getElementById('nitroBtn').addEventListener('mouseup', () => keys.space = false);
 
-        // Keyboard
         window.addEventListener('keydown', (e) => {
             if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
-            if(e.key === 's' || e.key === 'ArrowDown') { keys.s = true; playBrakeSound(); }
+            if(e.key === 's' || e.key === 'ArrowDown') keys.s = true;
             if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = true;
             if(e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
             if(e.key === ' ') { keys.space = true; playNitroSound(); }
@@ -201,27 +187,31 @@
         });
 
         function update() {
-            if (keys.w) player.speed += 0.5;
-            if (keys.s) player.speed -= 0.5;
-            if (keys.a) player.angle -= 0.05;
-            if (keys.d) player.angle += 0.05;
+            if (keys.w) player.speed += 0.6;
+            if (keys.s) player.speed -= 0.6;
+            if (keys.a) player.angle -= 0.06;
+            if (keys.d) player.angle += 0.06;
             if (keys.space && player.nitro > 0) {
-                player.speed += 1;
-                player.nitro -= 1.5;
+                player.speed += 1.2;
+                player.nitro -= 2;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
            
             if (player.nitro < 100 && !keys.space) {
-                player.nitro += 0.3;
+                player.nitro += 0.4;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
 
             player.speed *= 0.97;
-            if (player.speed > 12) player.speed = 12;
-            if (player.speed < -4) player.speed = -4;
+            if (player.speed > 15) player.speed = 15;
+            if (player.speed < -5) player.speed = -5;
            
             player.x += Math.cos(player.angle) * player.speed;
             player.y += Math.sin(player.angle) * player.speed;
+
+            // Camera follows player
+            camera.x = player.x - canvas.width / 2;
+            camera.y = player.y - canvas.height / 2;
 
             updateEngineSound();
             document.getElementById('speed').textContent = Math.abs(Math.floor(player.speed * 10));
@@ -230,56 +220,74 @@
 
         function drawTrack() {
             ctx.fillStyle = '#2a6f2a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(-camera.x, -camera.y, WORLD_WIDTH, WORLD_HEIGHT);
            
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 120;
+            ctx.lineWidth = 150;
             ctx.beginPath();
-            ctx.ellipse(canvas.width/2, canvas.height/2, canvas.width*0.35, canvas.height*0.35, 0, 0, Math.PI * 2);
+            ctx.ellipse(1500 - camera.x, 1500 - camera.y, 800, 600, 0, 0, Math.PI * 2);
             ctx.stroke();
            
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([20, 20]);
+            ctx.lineWidth = 5;
+            ctx.setLineDash([30, 30]);
             ctx.beginPath();
-            ctx.ellipse(canvas.width/2, canvas.height/2, canvas.width*0.35, canvas.height*0.35, 0, 0, Math.PI * 2);
+            ctx.ellipse(1500 - camera.x, 1500 - camera.y, 800, 600, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
+           
+            // Start line
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(1500 - camera.x, 850 - camera.y);
+            ctx.lineTo(1500 - camera.x, 950 - camera.y);
+            ctx.stroke();
         }
 
-        function drawCar(x, y, angle, color, name) {
+        function drawCar(x, y, angle, color, name, isMe) {
+            const screenX = x - camera.x;
+            const screenY = y - camera.y;
+           
             ctx.save();
-            ctx.translate(x, y);
+            ctx.translate(screenX, screenY);
             ctx.rotate(angle);
            
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.fillRect(-25, -13, 50, 26);
+            // BADI GAADI - 2x size
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(-30, -16, 60, 32);
            
             ctx.fillStyle = color;
-            ctx.fillRect(-23, -11, 46, 22);
+            ctx.fillRect(-28, -14, 56, 28);
+           
+            ctx.fillStyle = isMe ? '#00d4ff' : '#ff0066';
+            ctx.fillRect(-15, -12, 30, 24);
            
             ctx.fillStyle = '#87ceeb';
-            ctx.fillRect(-10, -9, 20, 18);
+            ctx.fillRect(-12, -10, 24, 8);
+            ctx.fillRect(-12, 2, 24, 8);
            
+            // Wheels
             ctx.fillStyle = '#111';
-            ctx.fillRect(-20, -15, 10, 5);
-            ctx.fillRect(-20, 10, 10, 5);
-            ctx.fillRect(12, -15, 10, 5);
-            ctx.fillRect(12, 10, 10, 5);
+            ctx.fillRect(-25, -18, 12, 6);
+            ctx.fillRect(-25, 12, 12, 6);
+            ctx.fillRect(15, -18, 12, 6);
+            ctx.fillRect(15, 12, 12, 6);
            
+            // Headlights
             ctx.fillStyle = '#ffff00';
-            ctx.fillRect(21, -7, 4, 4);
-            ctx.fillRect(21, 3, 4, 4);
+            ctx.fillRect(26, -8, 5, 5);
+            ctx.fillRect(26, 3, 5, 5);
            
             ctx.restore();
            
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 16px Arial';
+            ctx.font = 'bold 18px Arial';
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
-            ctx.strokeText(name, x, y - 30);
-            ctx.fillText(name, x, y - 30);
+            ctx.lineWidth = 4;
+            ctx.strokeText(name, screenX, screenY - 40);
+            ctx.fillText(name, screenX, screenY - 40);
         }
 
         function draw() {
@@ -288,7 +296,7 @@
            
             Object.values(players).forEach(p => {
                 const color = p.id === socket.id ? '#00d4ff' : '#ff3366';
-                drawCar(p.x, p.y, p.rotation, color, p.name);
+                drawCar(p.x, p.y, p.rotation, color, p.name, p.id === socket.id);
             });
         }
 
