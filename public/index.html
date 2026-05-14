@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qubenexus Racing - Camera Follow</title>
+    <title>Qubenexus Racing - Fixed</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { background: #0a0a0a; color: #00d4ff; font-family: 'Arial', sans-serif; overflow: hidden; }
-        #gameCanvas { display: block; background: #2a6f2a; }
+        #gameCanvas { display: block; background: #1a5c1a; }
         #joinScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 200; }
         .joinBox { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); padding: 40px; border-radius: 20px; border: 3px solid #00d4ff; text-align: center; }
         .joinBox h1 { margin-bottom: 20px; font-size: 2.5em; }
@@ -31,7 +31,7 @@
     <div id="joinScreen">
         <div class="joinBox">
             <h1>🏎️ QUBENEXUS RACING 🏎️</h1>
-            <p style="font-size: 1.1em; margin-bottom: 20px;">🔊 With Sound + Camera Follow!</p>
+            <p style="font-size: 1.1em; margin-bottom: 20px;">🔊 Fixed Version - Car Visible!</p>
             <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
             <br>
             <button onclick="joinGame()">🏁 START RACE</button>
@@ -73,19 +73,18 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // WORLD SIZE - Bada map
-        const WORLD_WIDTH = 3000;
-        const WORLD_HEIGHT = 3000;
-       
-        // Camera jo player ko follow karega
-        let camera = { x: 0, y: 0 };
-       
-        let player = { x: 1500, y: 1500, angle: -1.57, speed: 0, name: '', nitro: 100, lap: 0 };
+        // FIXED: Player hamesha center me start hoga
+        let player = { x: 0, y: 0, angle: -Math.PI/2, speed: 0, name: '', nitro: 100, lap: 0 };
         let players = {};
         let keys = { w: false, a: false, d: false, s: false, space: false };
         let soundOn = true;
-        let audioContext, engineGain;
-        let engineSound;
+        let audioContext, engineGain, engineSound;
+       
+        // Track ka size
+        const TRACK_CENTER_X = 0;
+        const TRACK_CENTER_Y = 0;
+        const TRACK_RADIUS_X = 800;
+        const TRACK_RADIUS_Y = 500;
 
         function initAudio() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -187,31 +186,27 @@
         });
 
         function update() {
-            if (keys.w) player.speed += 0.6;
-            if (keys.s) player.speed -= 0.6;
+            if (keys.w) player.speed += 0.7;
+            if (keys.s) player.speed -= 0.7;
             if (keys.a) player.angle -= 0.06;
             if (keys.d) player.angle += 0.06;
             if (keys.space && player.nitro > 0) {
-                player.speed += 1.2;
+                player.speed += 1.5;
                 player.nitro -= 2;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
            
             if (player.nitro < 100 && !keys.space) {
-                player.nitro += 0.4;
+                player.nitro += 0.5;
                 document.getElementById('nitroFill').style.width = player.nitro + '%';
             }
 
             player.speed *= 0.97;
-            if (player.speed > 15) player.speed = 15;
-            if (player.speed < -5) player.speed = -5;
+            if (player.speed > 18) player.speed = 18;
+            if (player.speed < -6) player.speed = -6;
            
             player.x += Math.cos(player.angle) * player.speed;
             player.y += Math.sin(player.angle) * player.speed;
-
-            // Camera follows player
-            camera.x = player.x - canvas.width / 2;
-            camera.y = player.y - canvas.height / 2;
 
             updateEngineSound();
             document.getElementById('speed').textContent = Math.abs(Math.floor(player.speed * 10));
@@ -219,81 +214,108 @@
         }
 
         function drawTrack() {
-            ctx.fillStyle = '#2a6f2a';
-            ctx.fillRect(-camera.x, -camera.y, WORLD_WIDTH, WORLD_HEIGHT);
+            // Grass background
+            ctx.fillStyle = '#1a5c1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
            
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 150;
+            // Save context for camera
+            ctx.save();
+            // Camera follows player - player hamesha center me
+            ctx.translate(canvas.width/2 - player.x, canvas.height/2 - player.y);
+           
+            // Draw track
+            ctx.strokeStyle = '#2a2a2a';
+            ctx.lineWidth = 200;
             ctx.beginPath();
-            ctx.ellipse(1500 - camera.x, 1500 - camera.y, 800, 600, 0, 0, Math.PI * 2);
+            ctx.ellipse(TRACK_CENTER_X, TRACK_CENTER_Y, TRACK_RADIUS_X, TRACK_RADIUS_Y, 0, 0, Math.PI * 2);
             ctx.stroke();
            
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 5;
-            ctx.setLineDash([30, 30]);
+            // Track center line
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 6;
+            ctx.setLineDash([40, 40]);
             ctx.beginPath();
-            ctx.ellipse(1500 - camera.x, 1500 - camera.y, 800, 600, 0, 0, Math.PI * 2);
+            ctx.ellipse(TRACK_CENTER_X, TRACK_CENTER_Y, TRACK_RADIUS_X, TRACK_RADIUS_Y, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
            
-            // Start line
+            // Start/Finish line
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 10;
+            ctx.lineWidth = 15;
             ctx.beginPath();
-            ctx.moveTo(1500 - camera.x, 850 - camera.y);
-            ctx.lineTo(1500 - camera.x, 950 - camera.y);
+            ctx.moveTo(0, -TRACK_RADIUS_Y - 100);
+            ctx.lineTo(0, -TRACK_RADIUS_Y + 100);
             ctx.stroke();
+           
+            // Checkered pattern
+            for(let i = 0; i < 10; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#fff' : '#000';
+                ctx.fillRect(-10, -TRACK_RADIUS_Y - 100 + i*20, 20, 20);
+            }
+           
+            ctx.restore();
         }
 
         function drawCar(x, y, angle, color, name, isMe) {
-            const screenX = x - camera.x;
-            const screenY = y - camera.y;
+            // Convert world position to screen position
+            const screenX = canvas.width/2 + (x - player.x);
+            const screenY = canvas.height/2 + (y - player.y);
            
             ctx.save();
             ctx.translate(screenX, screenY);
             ctx.rotate(angle);
            
-            // BADI GAADI - 2x size
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.fillRect(-30, -16, 60, 32);
+            // BIGGER CAR - 3x size ab
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(-35, -18, 70, 36);
            
+            // Main body
             ctx.fillStyle = color;
-            ctx.fillRect(-28, -14, 56, 28);
+            ctx.fillRect(-33, -16, 66, 32);
            
+            // Roof
             ctx.fillStyle = isMe ? '#00d4ff' : '#ff0066';
-            ctx.fillRect(-15, -12, 30, 24);
+            ctx.fillRect(-18, -14, 36, 28);
            
+            // Windows
             ctx.fillStyle = '#87ceeb';
-            ctx.fillRect(-12, -10, 24, 8);
-            ctx.fillRect(-12, 2, 24, 8);
+            ctx.fillRect(-15, -12, 30, 10);
+            ctx.fillRect(-15, 2, 30, 10);
            
-            // Wheels
+            // Wheels - Bade wheels
             ctx.fillStyle = '#111';
-            ctx.fillRect(-25, -18, 12, 6);
-            ctx.fillRect(-25, 12, 12, 6);
-            ctx.fillRect(15, -18, 12, 6);
-            ctx.fillRect(15, 12, 12, 6);
+            ctx.fillRect(-30, -22, 15, 8);
+            ctx.fillRect(-30, 14, 15, 8);
+            ctx.fillRect(18, -22, 15, 8);
+            ctx.fillRect(18, 14, 15, 8);
            
             // Headlights
             ctx.fillStyle = '#ffff00';
-            ctx.fillRect(26, -8, 5, 5);
-            ctx.fillRect(26, 3, 5, 5);
+            ctx.fillRect(31, -10, 6, 6);
+            ctx.fillRect(31, 4, 6, 6);
+           
+            // Spoiler
+            ctx.fillStyle = '#333';
+            ctx.fillRect(-33, -16, 6, 32);
            
             ctx.restore();
            
+            // Name tag
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 18px Arial';
+            ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 4;
-            ctx.strokeText(name, screenX, screenY - 40);
-            ctx.fillText(name, screenX, screenY - 40);
+            ctx.lineWidth = 5;
+            ctx.strokeText(name, screenX, screenY - 50);
+            ctx.fillText(name, screenX, screenY - 50);
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawTrack();
            
+            // Draw all players
             Object.values(players).forEach(p => {
                 const color = p.id === socket.id ? '#00d4ff' : '#ff3366';
                 drawCar(p.x, p.y, p.rotation, color, p.name, p.id === socket.id);
